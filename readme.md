@@ -1,5 +1,3 @@
-
-
 We provide hrnet-based data preprocessing in Diff-HMR, and most of the scripts follow the[ TCMR](https://github.com/hongsukchoi/TCMR_RELEASE/blob/master/asset/data.md). Download pre-processed data in this [link](https://drive.google.com/drive/folders/16o4OE8DZLWL8Mr1Oy066dsucTSoNEdjI). (Full data will be uploaded soon)
 
 You may also download datasets from source and pre-process yourself, following the guidelines below.
@@ -64,8 +62,6 @@ insta_variety
     `-- ...
 ```
 
-
-
 - **[PoseTrack](https://posetrack.net/)** 
 
 Directory structure: 
@@ -85,7 +81,7 @@ posetrack
 
 ## 2. Download HR-Net Checkpoint
 
- Download model checkpoint for HR-Net from this [link]([ckpt - Google 云端硬盘](https://drive.google.com/drive/folders/1dAZiPqJY2wBv6QzpjOwYi4Ax1y-oBIM1))
+ Download model checkpoint for HR-Net from this [link](https://drive.google.com/drive/folders/1dAZiPqJY2wBv6QzpjOwYi4Ax1y-oBIM1
 
 We load the pre-trained model and take the HR-Net output to save the features, details can be found in the code.
 
