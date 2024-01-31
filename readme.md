@@ -81,7 +81,7 @@ posetrack
 
 ## 2. Download HR-Net Checkpoint
 
- Download model checkpoint for HR-Net from this [link](https://drive.google.com/drive/folders/1dAZiPqJY2wBv6QzpjOwYi4Ax1y-oBIM1
+ Download model checkpoint for HR-Net from this [link](https://drive.google.com/drive/folders/1dAZiPqJY2wBv6QzpjOwYi4Ax1y-oBIM1)
 
 We load the pre-trained model and take the HR-Net output to save the features, details can be found in the code.
 
