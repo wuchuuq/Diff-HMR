@@ -18,7 +18,6 @@ import sys
 sys.path.append('.')
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '1' # 指定gpu
 import glob
 import joblib
 import argparse
@@ -30,7 +29,7 @@ import torch
 from lib.models import spin
 from lib.backbone.cliff_hr48 import CLIFF
 from lib.models.smpl import SMPL, SMPL_MODEL_DIR, H36M_TO_J14,SMPL_MEAN_PARAMS
-from lib.core.config import TCMR_DB_DIR
+
 from lib.utils.utils import tqdm_enumerate, strip_prefix_if_present
 from lib.data_utils._feature_extractor import extract_features
 from lib.data_utils._kp_utils import get_posetrack_original_kp_names, convert_kps
@@ -45,8 +44,7 @@ def read_data(folder, set):
         'features': [],
     }
 
-    # 加载用于数据增强的遮挡
-    occluders = load_occluders("/media/DATA2/wchuq/3DHPE/dataset/voc/VOCdevkit/VOC2012/")
+
 
     # model = spin.get_pretrained_hmr()
     # load model
@@ -162,7 +160,7 @@ def read_data(folder, set):
             # compute_features
             features = extract_features(
                 model,
-                occluders,
+                None,
                 np.array(img_paths),
                 bbox,
                 kp_2d=kp_2d,
@@ -196,5 +194,5 @@ if __name__ == '__main__':
 
     dataset_train = read_data(args.dir, 'train')
 
-    DB_DIR = "/media/DATA2/wchuq/3DHPE/TCMR_RELEASE-master/self_preprocess_data"
-    joblib.dump(dataset_train, osp.join(DB_DIR, 'hr48_posetrack_train_occ_db.pt'))
+    DB_DIR = ""
+    joblib.dump(dataset_train, osp.join(DB_DIR, 'hr48_posetrack_train_db.pt'))

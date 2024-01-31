@@ -14,18 +14,13 @@ import scipy.io as sio
 
 import sys
 sys.path.append('.')
-
-from lib.models import spin
-from lib.core.config import TCMR_DB_DIR, BASE_DATA_DIR
 from lib.models.smpl import SMPL, SMPL_MODEL_DIR, H36M_TO_J14,SMPL_MEAN_PARAMS
 from lib.backbone.cliff_hr48 import CLIFF
 from lib.utils.utils import tqdm_enumerate,strip_prefix_if_present
 from lib.data_utils._kp_utils import convert_kps
-from lib.data_utils._img_utils import get_bbox_from_kp2d
 from lib.data_utils._feature_extractor import extract_features
 
-from lib.data_utils._occ_utils import load_occluders
-from lib.models.smpl import H36M_TO_J14, SMPL_MODEL_DIR, SMPL
+
 from lib.utils.smooth_bbox import get_smooth_bbox_params, get_all_bbox_params
 from lib.utils.vis import draw_skeleton
 
@@ -102,9 +97,7 @@ def read_data_train(dataset_path, set='train', debug=False):
             smpl_params = json.load(f)
         ####
 
-        # seq_list = sorted(glob.glob(dataset_path + f'/Images/images/s_{subject:02d}*'))
-        # seq_list = sorted(glob.glob(dataset_path + f'Images/images/s_{subject:02d}*'))
-        seq_list = sorted (glob.glob(f"/media/DATA2/wchuq/3DHPE/H36M-Toolbox/images/s_{subject:02d}*"))
+        seq_list = sorted (glob.glob(f"{dataset_path}/images/s_{subject:02d}*"))
         for seq in tqdm(seq_list):
             seq_name = seq.split('/')[-1]
             act = str(int(seq_name.split('_act_')[-1][0:2]))
@@ -131,9 +124,7 @@ def read_data_train(dataset_path, set='train', debug=False):
             j2ds = np.zeros((num_frames, 49, 3), dtype=np.float32)
 
             for img_i in tqdm(range(num_frames)):
-                if img_i % 5 == 0:
-                    # 使用五倍下采样的标签
-                    ### 注释部分
+                if img_i % 5 == 0:\
                     # smpl_param = smpl_params[act][subact][str(img_i)][cam]
                     try:
                         smpl_param = smpl_params[act][subact][str(img_i)]
@@ -166,30 +157,11 @@ def read_data_train(dataset_path, set='train', debug=False):
                     j3ds[img_i] = j3d
                     j2ds[img_i] = j2d
 
-                    # ###注释部分
-                    # import torch
-                    # smpl = SMPL(SMPL_MODEL_DIR, batch_size=1, create_transl=False)
-        
-                    # p = torch.from_numpy(pose).float().reshape(1,-1,3)
-                    # s = torch.from_numpy(shape).float().reshape(1,-1)
-                    # J_regressor = torch.from_numpy(np.load("/media/DATA2/wchuq/3DHPE/TCMR_RELEASE-master/data/base_data/J_regressor_h36m.npy")).float()
-                    # output = smpl(betas=s, body_pose=p[:, 3:], global_orient=p[:, :3])
-                    # vertices = output.vertices
-                    # J_regressor_batch = J_regressor[None, :].expand(vertices.shape[0], -1, -1).to(vertices.device)
-                    # temp_j3d = torch.matmul(J_regressor_batch, vertices) * 1000 
-                    # # temp_j3d = temp_j3d - temp_j3d[:, 0, :]
-                    # temp_j3d = temp_j3d[0, H36M_TO_J14, :] # smpl参数通过回归器输出的关键点坐标
-        
-                    # gt_j3d = joint_cam - joint_cam[0, :]
-                    # gt_j3d = gt_j3d[H36M_TO_J14, :] # 实际的关键点坐标
-        
-                    # print("CHECK: ", (temp_j3d-gt_j3d))
-                    # ###注释部分
+
 
             bbox_params, time_pt1, time_pt2 = get_smooth_bbox_params(j2ds, vis_thresh=VIS_THRESH, sigma=8)
             # bbox_params, time_pt1, time_pt2 = get_all_bbox_params(j2ds, vis_thresh=VIS_THRESH)
 
-            # 绘图
             # img = cv2.imread(img_paths[0])
             # temp = draw_skeleton(img, j2ds[0], dataset='spin', unnormalize=False, thickness=2)
             # cv2.imshow('img', temp)
@@ -212,8 +184,7 @@ def read_data_train(dataset_path, set='train', debug=False):
             img_paths_array = np.array(img_paths)[time_pt1:time_pt2][::5]
             bbox = bbox[::5]
             # subsample frame to 25 fps
-            # 两倍下采样
-            # 不使用下采样
+
             dataset['vid_name'].append(np.array([f'{seq}_{subject}'] * num_frames)[time_pt1:time_pt2][::5])
             dataset['frame_id'].append(np.arange(0, num_frames)[time_pt1:time_pt2][::5])
             dataset['joints3D'].append(j3ds[time_pt1:time_pt2][::5])
@@ -245,16 +216,10 @@ if __name__ == '__main__':
 
     # import torch
     torch.set_num_threads(8)
-    # with open("/media/DATA2/wchuq/3DHPE/dataset/human3.6m/annotations/Human36M_subject1_smpl_param.json") as f:
-    #     smpl_params = json.load(f)
 
-    # data1 = joblib.load ("self_preprocess_data/h36m/hr48_h36m_train_db.pt")
-    # data2 = joblib.load ("/media/DATA2/wchuq/3DHPE/dataset/vibe_data/train/h36m_train_25fps_db.pt")
-
-    # data2['pose'] = data1['pose']
 
     dataset = read_data_train(args.dir, args.set)
-    joblib.dump(dataset, osp.join("self_preprocess_data/h36m", f'hr48_h36m_{args.set}_mocap_db.pt'))  # h36m_train_25fps_occ_db.pt
+    joblib.dump(dataset, osp.join("self_preprocess_data/h36m", f'hr48_h36m_{args.set}_db.pt'))  # h36m_train_25fps_occ_db.pt
 
 
 

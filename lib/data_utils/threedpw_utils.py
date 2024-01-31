@@ -20,7 +20,6 @@ import sys
 sys.path.append('.')
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '7' # 指定gpu
 import cv2
 import torch
 import joblib
@@ -31,8 +30,6 @@ import os.path as osp
 from tqdm import tqdm
 
 
-# 使用resnet50或hr48
-# from lib.backbone.cliff_res50 import CLIFF
 from lib.backbone.cliff_hr48 import CLIFF
 from lib.data_utils._kp_utils import *
 from lib.core.config import TCMR_DB_DIR, BASE_DATA_DIR
@@ -62,11 +59,8 @@ def read_data(folder, set, debug=False):
         'img_name': [],
         'features': [],
         'valid': [],
-        'gender':[]
     }
 
-    # 遮挡
-    # occluders = load_occluders("/media/DATA2/wchuq/3DHPE/dataset/voc/VOCdevkit/VOC2012/")
 
     # load model
     device = 'cuda'
@@ -78,8 +72,7 @@ def read_data(folder, set, debug=False):
     model.eval()
     model.load_state_dict(state_dict, strict=False)
 
-    # sequences = [x.split('.')[0] for x in os.listdir(osp.join(folder, 'sequenceFiles', set))]
-    sequences = ['courtyard_dancing_00', 'courtyard_hug_00', 'flat_guitar_01',  'outdoors_fencing_01']
+    sequences = [x.split('.')[0] for x in os.listdir(osp.join(folder, 'sequenceFiles', set))]
 
     J_regressor = None
 
@@ -89,12 +82,8 @@ def read_data(folder, set, debug=False):
 
     for i, seq in tqdm(enumerate(sequences)):
 
-        # data_file = osp.join(folder, 'sequenceFiles', set, seq + '.pkl')
-        if i < 2:
-            data_file = osp.join(folder, 'sequenceFiles','validation', seq + '.pkl')
-        else:
-            data_file = osp.join(folder, 'sequenceFiles','test', seq + '.pkl')
-
+        data_file = osp.join(folder, 'sequenceFiles', set, seq + '.pkl')
+        
 
         data = pkl.load(open(data_file, 'rb'), encoding='latin1')
 
@@ -109,7 +98,6 @@ def read_data(folder, set, debug=False):
             shape = torch.from_numpy(data['betas'][p_id][:10]).float().repeat(pose.size(0), 1)
             trans = torch.from_numpy(data['trans'][p_id]).float()
 
-            gender = data['genders'][p_id] #读取性别标签
 
             j2d = data['poses2d'][p_id].transpose(0,2,1)
             cam_pose = data['cam_poses']
@@ -173,9 +161,6 @@ def read_data(folder, set, debug=False):
             dataset['vid_name'].append(np.array([f'{seq}_{p_id}']*num_frames)[time_pt1:time_pt2])
             dataset['frame_id'].append(np.arange(0, num_frames)[time_pt1:time_pt2])
             dataset['img_name'].append(img_paths_array)
-            # 加上性别标签
-            gender_array = np.array([f'{gender}_{p_id}']*num_frames)[time_pt1:time_pt2]
-            dataset['gender'].append(gender_array)
             dataset['joints3D'].append(j3d.numpy()[time_pt1:time_pt2])
             dataset['joints2D'].append(j2d[time_pt1:time_pt2])
             dataset['shape'].append(shape.numpy()[time_pt1:time_pt2])
@@ -183,7 +168,6 @@ def read_data(folder, set, debug=False):
             dataset['bbox'].append(bbox)
             dataset['valid'].append(campose_valid[time_pt1:time_pt2])
 
-            # 使用遮挡: occ; 不使用:None
             features = extract_features(model, None, img_paths_array, bbox,
                                         kp_2d=j2d[time_pt1:time_pt2], debug=debug, dataset='3dpw', scale=1.3)
 
@@ -204,18 +188,13 @@ def read_data(folder, set, debug=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dir', type=str, help='dataset directory', default='/media/DATA2/wchuq/3DHPE/dataset/3dpw')
+    parser.add_argument('--dir', type=str, help='dataset directory', default='')
     parser.add_argument('--ckpt', type=str, help='cliff checkpoint', default='data/base_data/hr48-PA43.0_MJE69.0_MVE81.2_3dpw.pt')
     args = parser.parse_args()
     
     debug = False
 
-    DB_DIR = "/media/DATA2/wchuq/3DHPE/TCMR_RELEASE-master/self_preprocess_data/3DPW"
-    # dataset = read_data(args.dir, 'validation', debug=debug)
-    # joblib.dump(dataset, osp.join(DB_DIR, 'hr48_3dpw__val_db.pt'))
+    DB_DIR = ""
 
-    # dataset = read_data(args.dir, 'test', debug=debug)
-    # joblib.dump(dataset, osp.join(DB_DIR, 'hr48_3dpw__test_db.pt'))
-
-    dataset = read_data(args.dir, 'validation', debug=debug)
-    joblib.dump(dataset, osp.join(DB_DIR, 'hr48_3dpw_crowd_test_db.pt'))
+    dataset = read_data(args.dir, 'train', debug=debug)
+    joblib.dump(dataset, osp.join(DB_DIR, 'hr48_3dpw_trin_db.pt'))
